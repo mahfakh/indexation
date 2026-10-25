@@ -1,0 +1,128 @@
+\chapter{Spécification Complète des Contrats d'API REST}
+\label{app:api_specs}
+
+Cette annexe consigne les schémas complets d'échange de données (requêtes et réponses JSON) conformes aux spécifications OpenAPI v3 générées par le framework FastAPI.
+
+\section{Endpoint : Recherche Textuelle (\texttt{POST /api/search/text})}
+
+\subsection{Corps de la Requête JSON}
+\begin{lstlisting}[language=json, caption={Contrat JSON de la requête de recherche textuelle}]
+{
+  "query": "butterfly",
+  "dataset": "objects",
+  "max_results": 20,
+  "fuzzy_threshold": 0.7
+}
+\end{lstlisting}
+
+\subsection{Corps de la Réponse JSON}
+\begin{lstlisting}[language=json, caption={Contrat JSON de la réponse de recherche textuelle}]
+{
+  "total": 20,
+  "time_ms": 14.8,
+  "fuzzy": true,
+  "matched_category": "butterfly",
+  "results": [
+    {
+      "image_id": "objects/butterfly/image_0001",
+      "file_path": "C:/Datasets/Caltech101/Objects/butterfly/image_0001.jpg",
+      "url": "http://localhost:8000/static/Objects/butterfly/image_0001.jpg",
+      "category": "butterfly",
+      "score": 0.933,
+      "distance": null,
+      "rank": 1
+    },
+    {
+      "image_id": "objects/butterfly/image_0002",
+      "file_path": "C:/Datasets/Caltech101/Objects/butterfly/image_0002.jpg",
+      "url": "http://localhost:8000/static/Objects/butterfly/image_0002.jpg",
+      "category": "butterfly",
+      "score": 0.933,
+      "distance": null,
+      "rank": 2
+    }
+  ]
+}
+\end{lstlisting}
+
+\section{Endpoint : Recherche Visuelle CBIR (\texttt{POST /api/search/image})}
+
+\subsection{Corps de la Requête JSON}
+\begin{lstlisting}[language=json, caption={Contrat JSON de la requête de recherche visuelle}]
+{
+  "query_image_id": "objects/butterfly/image_0001",
+  "descriptor_type": "color_rgb",
+  "distance_metric": "l2",
+  "dataset": "objects",
+  "max_results": 20,
+  "use_index": true
+}
+\end{lstlisting}
+
+\subsection{Corps de la Réponse JSON}
+\begin{lstlisting}[language=json, caption={Contrat JSON de la réponse de recherche visuelle}]
+{
+  "query_image_id": "objects/butterfly/image_0001",
+  "descriptor_type": "color_rgb",
+  "distance_metric": "l2",
+  "total": 20,
+  "time_ms": 32.4,
+  "search_type": "indexed",
+  "comparisons": 21,
+  "results": [
+    {
+      "image_id": "objects/butterfly/image_0001",
+      "file_path": "C:/Datasets/Caltech101/Objects/butterfly/image_0001.jpg",
+      "url": "http://localhost:8000/static/Objects/butterfly/image_0001.jpg",
+      "category": "butterfly",
+      "distance": 0.0,
+      "score": 1.0,
+      "rank": 1
+    },
+    {
+      "image_id": "objects/butterfly/image_0042",
+      "file_path": "C:/Datasets/Caltech101/Objects/butterfly/image_0042.jpg",
+      "url": "http://localhost:8000/static/Objects/butterfly/image_0042.jpg",
+      "category": "butterfly",
+      "distance": 0.1284,
+      "score": 0.886,
+      "rank": 2
+    }
+  ]
+}
+\end{lstlisting}
+
+\section{Endpoint : Recherche Hybride Combinée (\texttt{POST /api/search/combined})}
+
+\subsection{Corps de la Requête JSON}
+\begin{lstlisting}[language=json, caption={Contrat JSON de la requête de recherche combinée}]
+{
+  "text_query": "butterfly",
+  "query_image_id": "objects/butterfly/image_0001",
+  "descriptor_type": "color_rgb",
+  "distance_metric": "l2",
+  "text_weight": 0.65,
+  "max_results": 20
+}
+\end{lstlisting}
+
+\subsection{Corps de la Réponse JSON}
+\begin{lstlisting}[language=json, caption={Contrat JSON de la réponse de recherche combinée}]
+{
+  "total": 20,
+  "time_ms": 36.1,
+  "text_weight": 0.65,
+  "comparisons": 21,
+  "results": [
+    {
+      "image_id": "objects/butterfly/image_0001",
+      "file_path": "C:/Datasets/Caltech101/Objects/butterfly/image_0001.jpg",
+      "url": "http://localhost:8000/static/Objects/butterfly/image_0001.jpg",
+      "category": "butterfly",
+      "score": 1.0,
+      "distance": 0.0,
+      "rank": 1
+    }
+  ]
+}
+\end{lstlisting}

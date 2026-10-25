@@ -1,0 +1,461 @@
+%==============================================================================
+%  MEMOIRE / RAPPORT TECHNIQUE DE PROJET DE FIN D'ETUDES / MASTER
+%  Sujet : Conception et Realisation d'un Moteur CBIR Haute Performance
+%  Institution : Ecole Superieure des Communications de Tunis (SUPCOM)
+%  Annee Universitaire : 2025 - 2026
+%  Format cible : ~30 pages
+%==============================================================================
+\documentclass[11pt,a4paper,oneside]{report}
+
+%------------------------------------------------------------------------------
+%  Paquetages d'Encodage, Typographie et Langue
+%------------------------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french,english]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+%------------------------------------------------------------------------------
+%  Geometrie et Mise en Page (Calibre pour ~30 pages)
+%------------------------------------------------------------------------------
+\usepackage[
+    a4paper,
+    top=2.3cm,
+    bottom=2.3cm,
+    left=2.6cm,
+    right=2.3cm,
+    headheight=14pt,
+    footskip=1.0cm
+]{geometry}
+\usepackage{setspace}
+\setstretch{1.15}       % Interligne 1.15 dense et elegant
+\setlength{\parskip}{4pt plus 1pt minus 1pt}
+\setlength{\parindent}{0pt}
+
+%------------------------------------------------------------------------------
+%  Graphiques, Couleurs et Tableaux
+%------------------------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage[table]{xcolor}
+
+%------------------------------------------------------------------------------
+%  Mathematiques et Algorithmes
+%------------------------------------------------------------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+%------------------------------------------------------------------------------
+%  Code Source et Listings
+%------------------------------------------------------------------------------
+\usepackage{listings}
+
+%------------------------------------------------------------------------------
+%  Boites Colorees et Cadres
+%------------------------------------------------------------------------------
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+%------------------------------------------------------------------------------
+%  Titres et En-tetes
+%------------------------------------------------------------------------------
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+%------------------------------------------------------------------------------
+%  Liens Hypertextes
+%------------------------------------------------------------------------------
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+%==============================================================================
+%  Definitions des Couleurs Chartes Graphiques
+%==============================================================================
+\definecolor{supcomBlue}{RGB}{20, 60, 120}
+\definecolor{cbirPrimary}{RGB}{31, 111, 235}
+\definecolor{cbirDark}{RGB}{15, 23, 42}
+\definecolor{cbirGreen}{RGB}{35, 134, 54}
+\definecolor{cbirOrange}{RGB}{210, 153, 34}
+\definecolor{cbirRed}{RGB}{218, 54, 51}
+\definecolor{codeBackground}{RGB}{246, 248, 250}
+\definecolor{codeBorder}{RGB}{208, 215, 222}
+
+%==============================================================================
+%  Configuration Hyperref
+%==============================================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=supcomBlue,
+    citecolor=cbirGreen,
+    urlcolor=cbirPrimary,
+    pdfauthor={Eleve-Ingenieur SUPCOM},
+    pdftitle={Systeme CBIR Haute Performance - Rapport Technique (30 pages)},
+    pdfsubject={Indexation et Recherche d'Images par le Contenu},
+    pdfkeywords={CBIR, VP-Tree, LBP, HOG, Caltech-101, FastAPI, Streamlit}
+}
+
+%==============================================================================
+%  Environnements Theoremes et Definitions
+%==============================================================================
+\theoremstyle{definition}
+\newtheorem{definition}{Définition}[chapter]
+\newtheorem{theorem}{Théorème}[chapter]
+\newtheorem{property}{Propriété}[chapter]
+
+%==============================================================================
+%  Configuration Listings Python / SQL / JSON / Docker
+%==============================================================================
+\lstdefinelanguage{json}{
+    basicstyle=\ttfamily\footnotesize,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=6pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{codeBackground},
+    rulecolor=\color{codeBorder},
+    stringstyle=\color{cbirGreen},
+    keywordstyle=\color{cbirPrimary}\bfseries
+}
+
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=6pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{codeBackground},
+    rulecolor=\color{codeBorder},
+    keywordstyle=\color{cbirPrimary}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{cbirGreen},
+    captionpos=b,
+    tabsize=4
+}
+
+%==============================================================================
+%  Configuration En-tetes et Pieds de Page
+%==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{gray}{\nouppercase{\leftmark}}}
+\fancyhead[R]{\small\textcolor{supcomBlue}{\textbf{Système CBIR — SUPCOM}}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0.3pt}
+}
+
+%==============================================================================
+%  Formatage Compact des Chapitres et Sections
+%==============================================================================
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\color{supcomBlue}}
+  {\filleft\Large\color{cbirPrimary}\textsc{Chapitre \thechapter}}
+  {0.5ex}
+  {\titlerule[1.5pt]\vspace{1ex}\LARGE\color{cbirDark}}
+  [\vspace{0.8ex}{\titlerule[0.8pt]}]
+
+\titlespacing*{\chapter}{0pt}{-10pt}{15pt}
+\titlespacing*{\section}{0pt}{10pt}{5pt}
+\titlespacing*{\subsection}{0pt}{8pt}{4pt}
+
+\titleformat{\section}
+  {\normalfont\large\bfseries\color{supcomBlue}}
+  {\thesection}{0.8em}{}
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries\color{cbirDark}}
+  {\thesubsection}{0.8em}{}
+
+%==============================================================================
+\begin{document}
+\selectlanguage{french}
+
+%==============================================================================
+%  PAGE DE GARDE OFFICIELLE
+%==============================================================================
+\begin{titlepage}
+    \begin{center}
+        \vspace*{-1.0cm}
+        {\large \textbf{RÉPUBLIQUE TUNISIENNE}}\\[0.15cm]
+        {\small Ministère de l'Enseignement Supérieur et de la Recherche Scientifique}\\[0.15cm]
+        {\small Université de Carthage}\\[0.3cm]
+        
+        \vspace{0.2cm}
+        {\Large \textbf{\textcolor{supcomBlue}{École Supérieure des Communications de Tunis}}}\\[0.15cm]
+        {\large \textbf{SUPCOM}}\\[0.4cm]
+        
+        \rule{\linewidth}{1.0pt}\\[0.3cm]
+        {\LARGE \textbf{\textcolor{supcomBlue}{MÉMOIRE DE PROJET D'INGÉNIERIE}}}\\[0.2cm]
+        {\normalsize \textbf{Filière : Télécommunications \& Technologies de l'Information}}\\[0.15cm]
+        {\small Module : Indexation et Recherche d'Informations Multimédias}\\[0.2cm]
+        \rule{\linewidth}{1.0pt}\\[0.8cm]
+        
+        {\huge \textbf{\textcolor{cbirDark}{Système de Recherche d'Images par le Contenu (CBIR) Haute Performance}}}\\[0.4cm]
+        {\Large \textit{Indexation Métrique par VP-Tree, Descripteurs Multi-Échelles et Moteur Hybride Multimodal}}\\[0.8cm]
+        
+        \begin{tcolorbox}[colback=codeBackground, colframe=supcomBlue, width=0.92\linewidth, arc=2mm]
+            \centering\small
+            \textbf{Domaines :} Vision Computationnelle, Espaces Métriques, Fouille Multimédia\\
+            \textbf{Stack Technique :} FastAPI, SQLite 3, NumPy, VP-Tree, Streamlit, Docker\\
+            \textbf{Dataset de Test :} Caltech-101 Objects ($9~145$ images, $101$ catégories)
+        \end{tcolorbox}
+        
+        \vspace{1.0cm}
+        
+        \begin{minipage}{0.48\textwidth}
+            \begin{flushleft} \normalsize
+                \textbf{Réalisé par :}\\[0.15cm]
+                \textsc{Élève-Ingénieur SUPCOM}\\[0.1cm]
+                Promotion 2025--2026
+            \end{flushleft}
+        \end{minipage}
+        \hfill
+        \begin{minipage}{0.48\textwidth}
+            \begin{flushright} \normalsize
+                \textbf{Sous la direction de :}\\[0.15cm]
+                \textsc{Pr. Encadrant de Module}\\[0.1cm]
+                Département Informatique
+            \end{flushright}
+        \end{minipage}
+        
+        \vfill
+        {\normalsize Année Universitaire : 2025 -- 2026}
+    \end{center}
+\end{titlepage}
+
+%==============================================================================
+%  FICHE SYNTHETIQUE ET REMERCIEMENTS
+%==============================================================================
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\chapter*{Remerciements}
+\addcontentsline{toc}{chapter}{Remerciements}
+
+Ce travail d'ingénierie a été réalisé au sein de l'\textbf{École Supérieure des Communications de Tunis (SUPCOM)}.
+
+Nous exprimons notre profonde gratitude à l'ensemble du corps professoral pour la rigueur de leur enseignement et la qualité de l'encadrement en traitement du signal multimédia et vision par ordinateur.
+
+Nos remerciements les plus vifs s'adressent à notre enseignant et responsable de module pour ses conseils méthodologiques et sa disponibilité constante.
+
+\vspace{0.5cm}
+
+\chapter*{Résumés / Abstract}
+\addcontentsline{toc}{chapter}{Résumés}
+
+\textbf{\large Résumé (Français)}
+
+La prolifération des bases documentaires d'images numériques nécessite des solutions d'indexation automatisées s'affranchissant de l'annotation textuelle manuelle. Ce rapport présente la conception et l'implémentation d'une plateforme de \textbf{recherche d'images par le contenu} (\textit{Content-Based Image Retrieval}, CBIR). Le système intègre trois familles de descripteurs visuels de bas niveau : histogrammes marginaux de couleur RGB/HSV (192 dims), motifs locaux binaires uniformes \textbf{LBP} pour la texture (26 dims) et histogrammes de gradients orientés \textbf{HOG} pour la silhouette (1~764 dims), complétés par les parseurs \textbf{MPEG-7}.
+
+Pour s'affranchir du coût prohibitif de la recherche linéaire exhaustive, nous développons un index en espace métrique fondé sur l'inégalité triangulaire : le \textbf{VP-Tree} (\textit{Vantage-Point Tree}). L'architecture repose sur un backend asynchrone \textbf{FastAPI}, une persistance relationnelle \textbf{SQLite} adossée à un cache binaire \textbf{NumPy}, un moteur hybride tolérant aux fautes de frappe (\textit{Fuzzy Matching} de Ratcliff/Obershelp) et une interface web moderne sous \textbf{Streamlit}. L'évaluation expérimentale sur la collection \textbf{Caltech-101} ($9~145$ images, $101$ classes) démontre que le VP-Tree procure une \textbf{accélération d'un facteur 131} ($32$ ms vs $4~198$ ms, $99{,}77\%$ de comparaisons élaguées) tout en garantissant un mAP de $0{,}36$ pour la couleur et $0{,}35$ pour le HOG.
+
+\vspace{0.4cm}
+\textbf{Mots-clés :} CBIR, VP-Tree, LBP, HOG, MPEG-7, Recherche Floue, Caltech-101, FastAPI, Streamlit.
+
+\vspace{0.8cm}
+\selectlanguage{english}
+\textbf{\large Abstract (English)}
+
+The proliferation of digital image repositories demands automated indexing architectures that transcend manual text tagging. This report details the design and implementation of an end-to-end \textbf{Content-Based Image Retrieval} (CBIR) platform. The system implements three low-level descriptor families: marginal color histograms in RGB/HSV (192 dims), uniform rotation-invariant \textbf{LBP} for texture (26 dims), and normalized \textbf{HOG} for shapes (1,764 dims), alongside standard \textbf{MPEG-7} parsers.
+
+To eliminate linear brute-force bottlenecks, we implement a pure metric space tree from scratch: the \textbf{Vantage-Point Tree} (\textbf{VP-Tree}), leveraging metric triangle inequality pruning bounds. The software architecture is powered by an asynchronous \textbf{FastAPI} backend, an ACID \textbf{SQLite} database coupled with binary \textbf{NumPy} caching, a fault-tolerant hybrid engine (Ratcliff/Obershelp fuzzy text matching), and a modern dark-mode \textbf{Streamlit} dashboard. Empirical evaluations across \textbf{Caltech-101} ($9,145$ images, $101$ classes) demonstrate that the VP-Tree achieves a \textbf{$\times 131$ speedup factor} ($32$ ms vs $4,198$ ms, $99.77\%$ candidate pruning) while securing a $0.36$ mAP for color and $0.35$ for HOG.
+
+\vspace{0.4cm}
+\textbf{Keywords :} CBIR, VP-Tree, LBP, HOG, MPEG-7, Fuzzy Search, Caltech-101, FastAPI, Streamlit.
+\selectlanguage{french}
+
+\newpage
+
+%==============================================================================
+%  TABLES DES MATIERES ET LISTES
+%==============================================================================
+\tableofcontents
+\newpage
+
+\listoffigures
+\vspace{0.8cm}
+\listoftables
+\newpage
+
+%==============================================================================
+%  ACRONYMES
+%==============================================================================
+\chapter*{Liste des Abréviations}
+\addcontentsline{toc}{chapter}{Liste des Abréviations}
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Acronyme} & \textbf{Définition Complète} \\
+\midrule
+\textbf{CBIR}   & \textit{Content-Based Image Retrieval} (Recherche d'Images par le Contenu) \\
+\textbf{TBIR}   & \textit{Text-Based Image Retrieval} (Recherche d'Images par le Texte) \\
+\textbf{QBE}    & \textit{Query-by-Example} (Recherche par l'Exemple) \\
+\textbf{LBP}    & \textit{Local Binary Pattern} (Motif Binaire Local) \\
+\textbf{HOG}    & \textit{Histogram of Oriented Gradients} (Histogramme de Gradients Orientés) \\
+\textbf{RGB}    & \textit{Red, Green, Blue} (Rouge, Vert, Bleu) \\
+\textbf{HSV}    & \textit{Hue, Saturation, Value} (Teinte, Saturation, Valeur) \\
+\textbf{MPEG-7} & \textit{Multimedia Content Description Interface} (Norme ISO/IEC 15938) \\
+\textbf{EHD}    & \textit{Edge Histogram Descriptor} (Descripteur d'Histogramme de Bords) \\
+\textbf{CLD}    & \textit{Color Layout Descriptor} (Descripteur de Disposition de Couleur) \\
+\textbf{VP-Tree}& \textit{Vantage-Point Tree} (Arbre d'Espace Métrique à Point de Vue) \\
+\textbf{$k$-NN} & \textit{$k$-Nearest Neighbors} ($k$ Plus Proches Voisins) \\
+\textbf{AP}     & \textit{Average Precision} (Précision Moyenne) \\
+\textbf{mAP}    & \textit{Mean Average Precision} (Moyenne des Précisions Moyennes) \\
+\textbf{MRR}    & \textit{Mean Reciprocal Rank} (Rang Réciproque Moyen) \\
+\textbf{REST}   & \textit{Representational State Transfer} \\
+\textbf{API}    & \textit{Application Programming Interface} \\
+\textbf{HNSW}   & \textit{Hierarchical Navigable Small World} \\
+\textbf{FAISS}  & \textit{Facebook AI Similarity Search} \\
+\textbf{CLIP}   & \textit{Contrastive Language-Image Pretraining} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%==============================================================================
+%  CORPS DU DOCUMENT : 6 CHAPITRES CONSOLIDES (~22-24 PAGES)
+%==============================================================================
+\input{chapters/ch1_introduction_descripteurs.tex}
+\input{chapters/ch2_espaces_metriques_vptree.tex}
+\input{chapters/ch3_architecture_conception.tex}
+\input{chapters/ch4_recherche_multimodale.tex}
+\input{chapters/ch5_interface_utilisateur.tex}
+\input{chapters/ch6_evaluation_deploiement.tex}
+
+%==============================================================================
+%  ANNEXES (~3 PAGES)
+%==============================================================================
+\appendix
+\input{appendices/app_a_api.tex}
+\input{appendices/app_b_code.tex}
+
+%==============================================================================
+%  BIBLIOGRAPHIE (~1 PAGE)
+%==============================================================================
+\newpage
+\begin{thebibliography}{99}
+\addcontentsline{toc}{chapter}{Bibliographie}
+
+\bibitem{caltech101}
+L.~Fei-Fei, R.~Fergus, and P.~Perona.
+\newblock Learning generative visual models from few training examples: An incremental Bayesian approach tested on 101 object categories.
+\newblock In \emph{IEEE CVPR Workshop on Generative-Model Based Vision}, pages 178--187, 2004.
+
+\bibitem{smeulders2000}
+A.~W.~M. Smeulders, M.~Worring, S.~Santini, A.~Gupta, and R.~Jain.
+\newblock Content-based image retrieval at the end of the early years.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence (TPAMI)}, 22(12):1349--1380, 2000.
+
+\bibitem{flickner1995}
+M.~Flickner, H.~Sawhney, W.~Niblack, et~al.
+\newblock Query by image and video content: The QBIC system.
+\newblock \emph{IEEE Computer}, 28(9):23--32, 1995.
+
+\bibitem{lowe2004}
+D.~G. Lowe.
+\newblock Distinctive image features from scale-invariant keypoints.
+\newblock \emph{International Journal of Computer Vision (IJCV)}, 60(2):91--110, 2004.
+
+\bibitem{dalal2005}
+N.~Dalal and B.~Triggs.
+\newblock Histograms of Oriented Gradients for human detection.
+\newblock In \emph{IEEE CVPR}, volume~1, pages 886--893, 2005.
+
+\bibitem{ojala1996}
+T.~Ojala, M.~Pietik{\"a}inen, and D.~Harwood.
+\newblock A comparative study of texture measures with classification based on featured distributions.
+\newblock \emph{Pattern Recognition}, 29(1):51--59, 1996.
+
+\bibitem{ojala2002}
+T.~Ojala, M.~Pietik{\"a}inen, and T.~M{\"a}enp{\"a}{\"a}.
+\newblock Multiresolution gray-scale and rotation invariant texture classification with Local Binary Patterns.
+\newblock \emph{IEEE TPAMI}, 24(7):971--987, 2002.
+
+\bibitem{yianilos1993}
+P.~N. Yianilos.
+\newblock Data structures and algorithms for nearest neighbor search in general metric spaces.
+\newblock In \emph{ACM-SIAM Symposium on Discrete Algorithms (SODA)}, pages 311--321, 1993.
+
+\bibitem{swain1991}
+M.~J. Swain and D.~H. Ballard.
+\newblock Color indexing.
+\newblock \emph{International Journal of Computer Vision}, 7(1):11--32, 1991.
+
+\bibitem{bellman1957}
+R.~Bellman.
+\newblock \emph{Dynamic Programming}.
+\newblock Princeton University Press, 1957.
+
+\bibitem{beyer1999}
+K.~Beyer, J.~Goldstein, R.~Ramakrishnan, and U.~Srivastava.
+\newblock When is ``nearest neighbor'' meaningful?
+\newblock In \emph{ICDT}, pages 217--235. Springer, 1999.
+
+\bibitem{manjunath2002}
+B.~S. Manjunath, P.~Salembier, and T.~Sikora.
+\newblock \emph{Introduction to MPEG-7: Multimedia Content Description Interface}.
+\newblock John Wiley \& Sons, 2002.
+
+\bibitem{ratcliff1988}
+J.~W. Ratcliff and D.~E. Metzener.
+\newblock Pattern matching: The gestalt approach.
+\newblock \emph{Dr. Dobb's Journal}, 13(7):46--51, 1988.
+
+\bibitem{he2016}
+K.~He, X.~Zhang, S.~Ren, and J.~Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In \emph{IEEE CVPR}, pages 770--778, 2016.
+
+\bibitem{radford2021}
+A.~Radford, J.~W. Kim, C.~Hallacy, et~al.
+\newblock Learning transferable visual models from natural language supervision.
+\newblock In \emph{ICML}, pages 8748--8763. PMLR, 2021.
+
+\bibitem{malkov2020}
+Y.~A. Malkov and D.~A. Yashunin.
+\newblock Efficient and robust approximate nearest neighbor search using HNSW graphs.
+\newblock \emph{IEEE TPAMI}, 42(4):824--836, 2020.
+
+\bibitem{fastapi}
+S.~Ram{\'\i}rez.
+\newblock FastAPI: High performance, easy to learn, fast to code, ready for production.
+\newblock \url{https://fastapi.tiangolo.com/}, 2019.
+
+\bibitem{streamlit}
+Streamlit Inc.
+\newblock Streamlit: The fastest way to build and share data apps.
+\newblock \url{https://streamlit.io/}, 2020.
+
+\end{thebibliography}
+
+\end{document}

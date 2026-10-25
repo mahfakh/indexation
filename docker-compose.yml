@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ${DATASET_B_OBJECTS_PATH:-./data/Objects}:/app/data/Objects:ro
+      - ${DATASET_B_TEXTURES_PATH:-./data/Textures}:/app/data/Textures:ro
+    env_file:
+      - .env
+    environment:
+      - DATASET_B_OBJECTS_PATH=/app/data/Objects
+      - DATASET_B_TEXTURES_PATH=/app/data/Textures
+      - STATIC_DIR=/app/data
+      - DB_PATH=/app/data/cbir.db
+      - FEATURES_CACHE_DIR=/app/data/cache/features
+      - INDEX_DIR=/app/data/cache/indexes
+    command: uvicorn cbir.api:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0

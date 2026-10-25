@@ -1,0 +1,170 @@
+\chapter{Implémentations Algorithmiques de Référence}
+\label{app:code_listings}
+
+Cette annexe rassemble les extraits de code source fondamentaux constituant le cœur algorithmique de la plateforme CBIR.
+
+\section{Module d'Indexation Spatiale Métrique (\texttt{cbir/indexing/vptree.py})}
+
+\begin{lstlisting}[language=Python, caption={Implémentation intégrale de l'index VP-Tree}]
+import heapq
+import random
+import numpy as np
+from typing import List, Tuple, Optional, Callable
+from dataclasses import dataclass
+
+@dataclass
+class _Node:
+    point: np.ndarray
+    point_id: str
+    mu: float
+    left: Optional['_Node'] = None
+    right: Optional['_Node'] = None
+
+class VPTree:
+    """Arbre d'espace metrique Vantage-Point Tree pour recherche k-NN."""
+
+    def __init__(self, distance_fn: Callable[[np.ndarray, np.ndarray], float]):
+        self.distance_fn = distance_fn
+        self.root: Optional[_Node] = None
+        self.n_nodes: int = 0
+        self.comparisons_last_query: int = 0
+
+    def build(self, items: List[Tuple[str, np.ndarray]]):
+        """Construit l'arbre recursivement a partir de couples (id, vecteur)."""
+        self.n_nodes = len(items)
+        self.root = self._build_recursive(list(items))
+
+    def _build_recursive(self, items: List[Tuple[str, np.ndarray]]) -> Optional[_Node]:
+        if not items:
+            return None
+
+        # Selection aleatoire uniforme du Vantage Point
+        vp_idx = random.randint(0, len(items) - 1)
+        vp_id, vp_point = items[vp_idx]
+        rest = items[:vp_idx] + items[vp_idx + 1:]
+
+        if not rest:
+            return _Node(vp_point, vp_id, mu=0.0)
+
+        # Calcul des distances au pivot
+        distances = [self.distance_fn(vp_point, pt) for _, pt in rest]
+        mu = float(np.median(distances))
+
+        # Partitionnement binaire selon la mediane mu
+        left_items = [item for item, d in zip(rest, distances) if d < mu]
+        right_items = [item for item, d in zip(rest, distances) if d >= mu]
+
+        node = _Node(vp_point, vp_id, mu)
+        node.left = self._build_recursive(left_items)
+        node.right = self._build_recursive(right_items)
+        return node
+
+    def query(self, query: np.ndarray, k: int = 10) -> List[Tuple[str, float]]:
+        """Recherche des k plus proches voisins avec elagage par tas-max."""
+        if self.root is None:
+            return []
+
+        # Tas-max stockant (-distance, point_id)
+        heap: List[Tuple[float, str]] = []
+        self.comparisons_last_query = 0
+
+        self._query_node(self.root, query, k, heap)
+
+        results = [(-dist, pid) for dist, pid in heap]
+        results.sort(key=lambda x: x[1])
+        return [(pid, dist) for dist, pid in sorted(results, key=lambda x: x[1])]
+
+    def _query_node(self, node: Optional[_Node], query: np.ndarray, k: int, heap: List[Tuple[float, str]]):
+        if node is None:
+            return
+
+        self.comparisons_last_query += 1
+        dist = self.distance_fn(query, node.point)
+
+        # Mise a jour du tas de priorite
+        if len(heap) < k:
+            heapq.heappush(heap, (-dist, node.point_id))
+        elif dist < -heap[0][0]:
+            heapq.heapreplace(heap, (-dist, node.point_id))
+
+        tau = -heap[0][0] if len(heap) >= k else float('inf')
+
+        # Elagage par l'inegalite triangulaire
+        if dist < node.mu:
+            if dist - tau < node.mu:
+                self._query_node(node.left, query, k, heap)
+            tau = -heap[0][0] if len(heap) >= k else float('inf')
+            if dist + tau >= node.mu:
+                self._query_node(node.right, query, k, heap)
+        else:
+            if dist + tau >= node.mu:
+                self._query_node(node.right, query, k, heap)
+            tau = -heap[0][0] if len(heap) >= k else float('inf')
+            if dist - tau < node.mu:
+                self._query_node(node.left, query, k, heap)
+\end{lstlisting}
+
+\section{Module des Métriques de Distance (\texttt{cbir/distances/metrics.py})}
+
+\begin{lstlisting}[language=Python, caption={Bibliothèque vectorielle de calcul de distances}]
+import numpy as np
+
+def l1_distance(x: np.ndarray, y: np.ndarray) -> float:
+    """Distance de Manhattan (L1)."""
+    return float(np.sum(np.abs(x - y)))
+
+def l2_distance(x: np.ndarray, y: np.ndarray) -> float:
+    """Distance Euclidienne (L2)."""
+    return float(np.linalg.norm(x - y))
+
+def chi_squared_distance(x: np.ndarray, y: np.ndarray, eps: float = 1e-10) -> float:
+    """Distance du Chi-Deux (Chi2) pour histogrammes."""
+    num = (x - y) ** 2
+    denom = x + y + eps
+    return float(0.5 * np.sum(num / denom))
+
+def bhattacharyya_distance(x: np.ndarray, y: np.ndarray, eps: float = 1e-10) -> float:
+    """Distance de Bhattacharyya."""
+    bc = np.sum(np.sqrt(np.clip(x * y, 0.0, None)))
+    bc = np.clip(bc, eps, 1.0)
+    return float(-np.log(bc))
+
+def cosine_distance(x: np.ndarray, y: np.ndarray, eps: float = 1e-10) -> float:
+    """Distance Cosinus (1 - similarite cosinus)."""
+    norm_x = np.linalg.norm(x)
+    norm_y = np.linalg.norm(y)
+    if norm_x < eps or norm_y < eps:
+        return 1.0
+    similarity = np.dot(x, y) / (norm_x * norm_y + eps)
+    return float(np.clip(1.0 - similarity, 0.0, 2.0))
+\end{lstlisting}
+
+\section{Module d'Extraction LBP (\texttt{cbir/descriptors/lbp.py})}
+
+\begin{lstlisting}[language=Python, caption={Extracteur de motifs locaux binaires LBP}]
+import cv2
+import numpy as np
+from skimage.feature import local_binary_pattern
+
+class LBPExtractor:
+    def __init__(self, n_points: int = 24, radius: int = 3, method: str = 'uniform'):
+        self.n_points = n_points
+        self.radius = radius
+        self.method = method
+        self.n_bins = n_points + 2 if method == 'uniform' else 2 ** n_points
+
+    def extract(self, image_path: str) -> np.ndarray:
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if image is None:
+            raise ValueError(f"Impossible de charger l'image : {image_path}")
+
+        image = cv2.resize(image, (256, 256), interpolation=cv2.INTER_AREA)
+        lbp = local_binary_pattern(image, self.n_points, self.radius, method=self.method)
+
+        hist, _ = np.histogram(lbp.ravel(), bins=self.n_bins, range=(0, self.n_bins))
+        hist = hist.astype(np.float32)
+        total = hist.sum()
+        if total > 0:
+            hist /= total
+        return hist
+\end{lstlisting}
